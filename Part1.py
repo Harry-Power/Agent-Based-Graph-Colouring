@@ -2,11 +2,11 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 
-GRAPH_SIZE = 100
+GRAPH_SIZE = 40
 ITERATIONS = 100
 NUM_RUNS = 20
 NUM_COLOURS = 6
-EDGE_PROBABILITY = 0.05
+EDGE_PROBABILITY = 0.1
 
 # Function to count the number of conflicts
 def count_conflicts(g):
@@ -27,7 +27,11 @@ colours = colours[:NUM_COLOURS]
 conflicts_over_time = [[] for _ in range(NUM_RUNS)]
 for i in range(NUM_RUNS):
 
+    # Generate a random graph
     G = nx.erdos_renyi_graph(GRAPH_SIZE, EDGE_PROBABILITY)
+    #G = nx.random_regular_graph(3, GRAPH_SIZE)
+    # Small world graph
+    #G = nx.newman_watts_strogatz_graph(GRAPH_SIZE, 5, 0.5)
 
     # Randomly assign colors to the nodes
     for node in G.nodes:
@@ -40,14 +44,15 @@ for i in range(NUM_RUNS):
         G.nodes[node]['color'] = np.random.choice(colours)
 
     for _ in range(ITERATIONS):
+        buffer = list(G.nodes[node]['color'] for node in G.nodes)
         for node in G.nodes:
-            conflict = False
             for neighbor in G.neighbors(node):
                 if G.nodes[node]['color'] == G.nodes[neighbor]['color']:
-                    conflict = True
+                    buffer[node] = np.random.choice(colours)
                     break
-            if conflict:
-                G.nodes[node]['color'] = np.random.choice(colours)
+
+        for node in G.nodes:
+            G.nodes[node]['color'] = buffer[node]
 
         # Count the number of conflicts
         conflicts = count_conflicts(G)
